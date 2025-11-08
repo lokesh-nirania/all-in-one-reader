@@ -3,7 +3,11 @@ package reader
 import (
 	"errors"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -16,6 +20,8 @@ const (
 	SCHEME_HTTP_PREFIX  = SCHEME_HTTP + SCHEME_SUFFIX
 	SCHEME_HTTPS_PREFIX = SCHEME_HTTPS + SCHEME_SUFFIX
 	SCHEME_FILE_PREFIX  = SCHEME_FILE + SCHEME_SUFFIX
+
+	PART_FILE_SUFFIX = ".part"
 )
 
 func NewReader(source string) (*Reader, error) {
@@ -41,8 +47,14 @@ func NewReader(source string) (*Reader, error) {
 	return nil, errors.New("unsupported scheme")
 }
 
+type SourceReader interface {
+	io.Reader
+	Filename() string
+	TotalSize() int64
+}
+
 type Reader struct {
-	src io.Reader
+	src SourceReader
 }
 
 func (r *Reader) Read(p []byte) (int, error) {
@@ -50,4 +62,42 @@ func (r *Reader) Read(p []byte) (int, error) {
 		return 0, io.EOF
 	}
 	return r.src.Read(p)
+}
+
+func (r *Reader) StreamToFile(destinationFolder string) (string, int64, error) {
+	if r.src == nil {
+		return "", 0, errors.New("reader source is nil")
+	}
+
+	tempPath := filepath.Join(destinationFolder, uuid.New().String()+PART_FILE_SUFFIX)
+	out, err := os.Create(tempPath)
+	if err != nil {
+		return "", 0, err
+	}
+	defer out.Close()
+
+	pr := &ProgressReader{
+		Reader:    r.src,
+		TotalSize: r.src.TotalSize(),
+		Notify:    NotifyProgress,
+	}
+
+	n, err := io.Copy(out, pr)
+	if err != nil && err != io.EOF {
+		return tempPath, n, err
+	}
+
+	finalName := r.src.Filename()
+	finalPath := filepath.Join(destinationFolder, finalName)
+
+	finalPath, err = GetUniqueFilePath(finalPath)
+	if err != nil {
+		return tempPath, n, err
+	}
+
+	if renameErr := os.Rename(tempPath, finalPath); renameErr != nil {
+		return tempPath, n, renameErr
+	}
+
+	return finalPath, n, nil
 }

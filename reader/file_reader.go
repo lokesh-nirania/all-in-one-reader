@@ -3,18 +3,31 @@ package reader
 import (
 	"errors"
 	"os"
+	"path/filepath"
 )
 
 func NewFileReader(source string) (*FileReader, error) {
-	if !isFileExist(source) {
+	totalSize, exists := isFileExist(source)
+	if !exists {
 		return nil, errors.New("file not found")
 	}
-	return &FileReader{src: source}, nil
+	filename := filepath.Base(source)
+	return &FileReader{src: source, filename: filename, totalSize: totalSize}, nil
 }
 
 type FileReader struct {
-	src  string
-	file *os.File
+	src       string
+	filename  string
+	file      *os.File
+	totalSize int64
+}
+
+func (r *FileReader) Filename() string {
+	return r.filename
+}
+
+func (r *FileReader) TotalSize() int64 {
+	return r.totalSize
 }
 
 func (r *FileReader) Read(p []byte) (int, error) {
@@ -28,10 +41,10 @@ func (r *FileReader) Read(p []byte) (int, error) {
 	return r.file.Read(p)
 }
 
-func isFileExist(path string) bool {
-	_, err := os.Stat(path)
+func isFileExist(path string) (int64, bool) {
+	info, err := os.Stat(path)
 	if err != nil {
-		return false
+		return 0, false
 	}
-	return true
+	return info.Size(), true
 }
