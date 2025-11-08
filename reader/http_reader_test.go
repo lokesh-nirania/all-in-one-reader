@@ -43,6 +43,7 @@ func (s *HTTPReaderTestSuite) SetupTest() {
 			(r.Method == http.MethodHead && r.URL.Path == NETWORK_RESET_ON_GET_PATH)
 
 		hiJackConditions := (r.Method == http.MethodHead && r.URL.Path == NETWORK_RESET_ON_HEAD_PATH) ||
+			(r.Method == http.MethodGet && r.URL.Path == NETWORK_RESET_ON_HEAD_PATH) ||
 			(r.Method == http.MethodGet && r.URL.Path == NETWORK_RESET_ON_GET_PATH)
 
 		getOKConditions := (r.Method == http.MethodGet && r.URL.Path == GET_OK_FILE_PATH)
@@ -114,7 +115,7 @@ func (s *HTTPReaderTestSuite) TestNewHTTPReaderShouldReturnErrorIfURLDoesNotExis
 
 func (s *HTTPReaderTestSuite) TestNewHTTPReaderShouldReturnErrorIfNetworkReset() {
 	url := s.server.URL + NETWORK_RESET_ON_HEAD_PATH
-	expectedError := "Head \"" + url + "\": EOF"
+	expectedError := "Get \"" + url + "\": EOF"
 
 	_, err := NewHTTPReader(url)
 	s.Error(err)

@@ -16,7 +16,9 @@ func main() {
 	// r, err := reader.NewReader("https://getsamplefiles.com/download/gzip/sample-1.gz")
 
 	// r, err := reader.NewReader("file:///Users/lokesh.nirania/Downloads/ubuntu-25.04-desktop-arm64.iso")
-	r, err := reader.NewReader("https://mirror.bharatdatacenter.com/ubuntu-releases/24.04.3/ubuntu-24.04.3-desktop-amd64.iso")
+	// r, err := reader.NewReader("https://mirror.bharatdatacenter.com/ubuntu-releases/24.04.3/ubuntu-24.04.3-desktop-amd64.iso")
+
+	r, err := reader.NewReader("https://ash-speed.hetzner.com/100MB.bin")
 	if err != nil {
 		log.Fatalf("failed to create reader: %s", err)
 	}

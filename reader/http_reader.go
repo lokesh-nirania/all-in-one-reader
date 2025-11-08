@@ -86,7 +86,10 @@ func (r *HTTPReader) Read(p []byte) (int, error) {
 func getUrlInfo(client *http.Client, url string) (string, int64, error) {
 	resp, err := client.Head(url)
 	if err != nil {
-		return "", 0, err
+		resp, err = client.Get(url)
+		if err != nil {
+			return "", 0, err
+		}
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
