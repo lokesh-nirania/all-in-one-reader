@@ -3,11 +3,14 @@ package reader
 import (
 	"compress/gzip"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"path/filepath"
 	"strings"
 	"time"
+
+	apperrors "abc/errors"
 )
 
 func NewHTTPReader(source string) (*HTTPReader, error) {
@@ -15,9 +18,9 @@ func NewHTTPReader(source string) (*HTTPReader, error) {
 		Timeout: 10 * time.Second,
 	}
 
-	filename, totalSize, exists := isUrlExists(httpClient, source)
-	if !exists {
-		return nil, errors.New("url not exists")
+	filename, totalSize, err := getUrlInfo(httpClient, source)
+	if err != nil {
+		return nil, err
 	}
 
 	httpClientForGET := &http.Client{
@@ -58,8 +61,14 @@ func (r *HTTPReader) Read(p []byte) (int, error) {
 		if err != nil {
 			return 0, err
 		}
+
+		if resp.StatusCode != http.StatusOK {
+			return 0, errors.New(apperrors.ERR_URL_NOT_EXISTS)
+		}
+
 		ctype := resp.Header.Get("Content-Type")
-		if strings.Contains(ctype, "application/gzip") {
+		fmt.Println("ctype", ctype)
+		if strings.Contains(ctype, "application/gzip") || strings.Contains(ctype, "application/x-gzip") {
 			gz, err := gzip.NewReader(resp.Body)
 			if err != nil {
 				resp.Body.Close()
@@ -74,14 +83,14 @@ func (r *HTTPReader) Read(p []byte) (int, error) {
 	return r.body.Read(p)
 }
 
-func isUrlExists(client *http.Client, url string) (string, int64, bool) {
+func getUrlInfo(client *http.Client, url string) (string, int64, error) {
 	resp, err := client.Head(url)
 	if err != nil {
-		return "", 0, false
+		return "", 0, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return "", 0, false
+		return "", 0, errors.New(apperrors.ERR_URL_NOT_EXISTS)
 	}
 
 	filename := resp.Header.Get("Content-Disposition")
@@ -91,5 +100,5 @@ func isUrlExists(client *http.Client, url string) (string, int64, bool) {
 	}
 
 	fileSize := resp.ContentLength
-	return filename, fileSize, true
+	return filename, fileSize, nil
 }

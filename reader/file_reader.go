@@ -4,12 +4,14 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+
+	apperrors "abc/errors"
 )
 
 func NewFileReader(source string) (*FileReader, error) {
 	totalSize, exists := isFileExist(source)
 	if !exists {
-		return nil, errors.New("file not found")
+		return nil, errors.New(apperrors.ERR_FILE_NOT_FOUND)
 	}
 	filename := filepath.Base(source)
 	return &FileReader{src: source, filename: filename, totalSize: totalSize}, nil

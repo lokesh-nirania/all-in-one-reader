@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	apperrors "abc/errors"
+
 	"github.com/google/uuid"
 )
 
@@ -44,7 +46,7 @@ func NewReader(source string) (*Reader, error) {
 		return &Reader{httpReader}, nil
 	}
 
-	return nil, errors.New("unsupported scheme")
+	return nil, errors.New(apperrors.ERR_UNSUPPORTED_SCHEME)
 }
 
 type SourceReader interface {
@@ -66,7 +68,7 @@ func (r *Reader) Read(p []byte) (int, error) {
 
 func (r *Reader) StreamToFile(destinationFolder string) (string, int64, error) {
 	if r.src == nil {
-		return "", 0, errors.New("reader source is nil")
+		return "", 0, errors.New(apperrors.ERR_READER_SOURCE_NIL)
 	}
 
 	tempPath := filepath.Join(destinationFolder, uuid.New().String()+PART_FILE_SUFFIX)
