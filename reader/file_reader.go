@@ -43,6 +43,15 @@ func (r *FileReader) Read(p []byte) (int, error) {
 	return r.file.Read(p)
 }
 
+func (r *FileReader) Close() error {
+	if r.file != nil {
+		err := r.file.Close()
+		r.file = nil
+		return err
+	}
+	return nil
+}
+
 func isFileExist(path string) (int64, bool) {
 	info, err := os.Stat(path)
 	if err != nil {

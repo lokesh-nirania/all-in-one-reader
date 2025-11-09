@@ -50,7 +50,7 @@ func NewReader(source string) (*Reader, error) {
 }
 
 type SourceReader interface {
-	io.Reader
+	io.ReadCloser
 	Filename() string
 	TotalSize() int64
 }
@@ -64,6 +64,13 @@ func (r *Reader) Read(p []byte) (int, error) {
 		return 0, io.EOF
 	}
 	return r.src.Read(p)
+}
+
+func (r *Reader) Close() error {
+	if r.src == nil {
+		return nil
+	}
+	return r.src.Close()
 }
 
 func (r *Reader) StreamToFile(destinationFolder string) (string, int64, error) {

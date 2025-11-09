@@ -22,6 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create reader: %s", err)
 	}
+	defer r.Close()
 
 	filePath, n, err := r.StreamToFile(downloadFolder)
 	if err != nil {

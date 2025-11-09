@@ -83,6 +83,15 @@ func (r *HTTPReader) Read(p []byte) (int, error) {
 	return r.body.Read(p)
 }
 
+func (r *HTTPReader) Close() error {
+	if r.body != nil {
+		err := r.body.Close()
+		r.body = nil
+		return err
+	}
+	return nil
+}
+
 func getUrlInfo(client *http.Client, url string) (string, int64, error) {
 	resp, err := client.Head(url)
 	if err != nil {
